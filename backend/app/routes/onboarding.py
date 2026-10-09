@@ -1,8 +1,29 @@
+import uuid
+from typing import Optional
 from fastapi import APIRouter, HTTPException
 from app.models.schemas import ProfileCreateRequest, ProfileResponse
 from app.db.supabase_client import db
 
 router = APIRouter(prefix="/api/onboarding", tags=["Onboarding"])
+
+@router.post("/guest", response_model=ProfileResponse)
+async def create_guest_profile(payload: Optional[dict] = None):
+    try:
+        hobby = (payload or {}).get("hobby_anchor") or "Music Production"
+        guest_email = f"guest_{uuid.uuid4().hex[:10]}@tessera.edu"
+        profile = db.get_or_create_profile(
+            email=guest_email,
+            display_name="Learner",
+            hobby_anchor=hobby
+        )
+        return ProfileResponse(
+            id=str(profile["id"]),
+            email=profile["email"],
+            display_name=profile.get("display_name") or "Learner",
+            hobby_anchor=profile.get("hobby_anchor") or hobby
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to create guest profile: {str(e)}")
 
 @router.post("/profile", response_model=ProfileResponse)
 async def create_or_get_profile(req: ProfileCreateRequest):

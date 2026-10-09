@@ -13,14 +13,7 @@ export default function HomePage() {
     const prewarm = async () => {
       try {
         const store = useGraphStore.getState();
-        let profile = store.userProfile;
-        if (!profile?.id) {
-          profile = await api.createProfile('student@forgehacks.edu', 'Alex Vance', 'Music Production');
-          store.setUserProfile(profile);
-        }
-        if (profile?.id && store.chapters.length === 0) {
-          await store.loadUserGraph(profile.id);
-        }
+        await store.initUserSession();
       } catch (err) {
         console.debug('Background prewarm skipped:', err);
       }

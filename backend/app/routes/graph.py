@@ -61,8 +61,10 @@ async def get_user_graph_canvas(user_id: str):
                 status = "MASTERED"
             elif p_mastery <= 0.40 and (has_misc or epistemic.get("status") == "FRAGILE"):
                 status = "FRAGILE"
+            elif epistemic.get("status") in ["UNVERIFIED", "IN_PROGRESS"]:
+                status = epistemic.get("status")
             else:
-                status = epistemic.get("status") if epistemic.get("status") in ["MASTERED", "FRAGILE"] else "IN_PROGRESS"
+                status = "UNVERIFIED"
 
             is_hobby = c.get("is_hobby_anchor", False)
             node_type = "hobbyAnchor" if is_hobby else "conceptPill"

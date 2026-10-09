@@ -69,7 +69,7 @@ export const OnboardingModal: React.FC<{ isOpen: boolean; onComplete: () => void
   const { userProfile, setUserProfile, updateUserHobby, loadUserGraph } = useGraphStore();
   const [selectedHobby, setSelectedHobby] = useState(userProfile?.hobby_anchor || 'Music Production');
   const [customHobby, setCustomHobby] = useState('');
-  const [email, setEmail] = useState('student@forgehacks.edu');
+  const [email, setEmail] = useState('');
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -106,8 +106,14 @@ export const OnboardingModal: React.FC<{ isOpen: boolean; onComplete: () => void
         await updateUserHobby(activeHobby);
         await loadUserGraph(userProfile.id);
       } else {
-        const profile = await api.createProfile(email, email.split('@')[0], activeHobby);
+        const guestEmail = email.trim() || `guest_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10)}@tessera.edu`;
+        const profile = await api.createProfile(guestEmail, guestEmail.split('@')[0], activeHobby);
         setUserProfile(profile);
+        try {
+          await api.seedSampleChapter(profile.id, 1, activeHobby);
+        } catch (e) {
+          console.warn('Initial sample chapter seeding failed:', e);
+        }
         await loadUserGraph(profile.id);
       }
       onComplete();

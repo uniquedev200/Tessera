@@ -131,6 +131,7 @@ function CognitiveStudioInner() {
   const {
     userProfile,
     setUserProfile,
+    initUserSession,
     nodes,
     edges,
     chapters,
@@ -167,20 +168,8 @@ function CognitiveStudioInner() {
 
   // Initialize or fetch default student profile on load
   useEffect(() => {
-    async function initProfile() {
-      try {
-        let profile = userProfile;
-        if (!profile?.id) {
-          profile = await api.createProfile('student@forgehacks.edu', 'Alex Vance', 'Music Production');
-          setUserProfile(profile);
-        }
-        await loadUserGraph(profile.id);
-      } catch (err) {
-        console.error('Profile initialization error:', err);
-      }
-    }
-    initProfile();
-  }, []);
+    initUserSession();
+  }, [initUserSession]);
 
   // When a concept node is clicked, automatically switch Hub to the inspector tab
   useEffect(() => {
@@ -200,7 +189,7 @@ function CognitiveStudioInner() {
   const conceptNodes = useMemo(() => nodes.filter((n) => n.type === 'conceptPill'), [nodes]);
   const masteredCount = useMemo(() => conceptNodes.filter((n) => n.data?.status === 'MASTERED').length, [conceptNodes]);
   const fragileCount = useMemo(() => conceptNodes.filter((n) => n.data?.status === 'FRAGILE').length, [conceptNodes]);
-  const unverifiedCount = useMemo(() => conceptNodes.filter((n) => n.data?.status === 'UNVERIFIED').length, [conceptNodes]);
+  const unverifiedCount = useMemo(() => conceptNodes.filter((n) => n.data?.status !== 'MASTERED' && n.data?.status !== 'FRAGILE').length, [conceptNodes]);
 
   const activeHobby = userProfile?.hobby_anchor || 'Music Production';
 

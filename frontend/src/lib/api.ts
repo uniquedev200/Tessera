@@ -51,6 +51,13 @@ export const api = {
     });
   },
 
+  async createGuestProfile(hobbyAnchor: string = 'Music Production'): Promise<Profile> {
+    return fetchJson<Profile>('/api/onboarding/guest', {
+      method: 'POST',
+      body: JSON.stringify({ hobby_anchor: hobbyAnchor }),
+    });
+  },
+
   async updateHobby(userId: string, hobbyAnchor: string): Promise<{ status: string; updated_count?: number; updated_nodes?: any[] }> {
     return fetchJson('/api/user/hobby', {
       method: 'POST',

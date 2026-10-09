@@ -131,6 +131,7 @@ interface GraphState {
 
   // Actions
   setUserProfile: (profile: Profile | null) => void;
+  initUserSession: () => Promise<Profile>;
   loadUserGraph: (userId: string) => Promise<void>;
   updateUserHobby: (newHobby: string) => Promise<void>;
   onNodesChange: (changes: NodeChange[]) => void;
@@ -191,6 +192,50 @@ export const useGraphStore = create<GraphState>()(
 
       setUserProfile: (profile) => set({ userProfile: profile }),
 
+      initUserSession: async () => {
+        let profile = get().userProfile;
+
+        // 1. If we already have a valid profile with a valid ID
+        if (profile?.id) {
+          if (get().chapters.length === 0) {
+            await get().loadUserGraph(profile.id);
+            // If user has no chapters yet, seed Sample Chapter 1
+            if (get().chapters.length === 0) {
+              try {
+                await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
+                await get().loadUserGraph(profile.id);
+              } catch (e) {
+                console.warn('Initial sample chapter seeding failed:', e);
+              }
+            }
+          }
+          return profile;
+        }
+
+        // 2. Fresh visitor: Create isolated unique guest profile
+        try {
+          profile = await api.createGuestProfile('Music Production');
+        } catch {
+          const guestId = typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID().slice(0, 8)
+            : Math.random().toString(36).slice(2, 10);
+          profile = await api.createProfile(`guest_${guestId}@tessera.edu`, 'Learner', 'Music Production');
+        }
+
+        set({ userProfile: profile });
+
+        // 3. Immediately seed Sample Chapter 1 so the visitor starts with a populated, interactive quest map
+        try {
+          await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
+        } catch (e) {
+          console.warn('Initial sample chapter seeding failed:', e);
+        }
+
+        // 4. Load the graph
+        await get().loadUserGraph(profile.id);
+        return profile;
+      },
+
       loadUserGraph: async (userId: string) => {
         // Only trigger heavy loading indicator if we don't already have chapters cached
         const hasCachedChapters = get().chapters.length > 0;
@@ -213,8 +258,8 @@ export const useGraphStore = create<GraphState>()(
               }
             : {
                 id: userId,
-                email: 'student@forgehacks.edu',
-                display_name: 'Alex Vance',
+                email: `guest_${userId.slice(0, 8)}@tessera.edu`,
+                display_name: 'Learner',
                 hobby_anchor: graphData.hobby_anchor || 'Music Production',
                 created_at: new Date().toISOString(),
               };
