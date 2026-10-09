@@ -1,0 +1,162 @@
+{
+  "chapter_title": "Electric Potential & Drift Dynamics",
+  "subject": "Physics: Electromagnetism",
+  "concepts": [
+    {
+      "id": "electric_field",
+      "label": "Electric Field",
+      "core_invariant": "Force per unit charge, a vector field",
+      "jargon_blacklist": [
+        "field",
+        "charge",
+        "force",
+        "electric"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Stereo bus send level: determines how much signal is pushed to downstream tracks."
+    },
+    {
+      "id": "electrostatic_force",
+      "label": "Electrostatic Force",
+      "core_invariant": "Force = charge \u00d7 electric field",
+      "jargon_blacklist": [
+        "force",
+        "charge",
+        "electric",
+        "field"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Plugin's gain knob: multiplies incoming signal amplitude, exerting push on the waveform."
+    },
+    {
+      "id": "free_conduction_electrons",
+      "label": "Free Conduction Electrons",
+      "core_invariant": "Fermionic carriers occupying the conduction band",
+      "jargon_blacklist": [
+        "electron",
+        "charge",
+        "conduction",
+        "carrier"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Unprocessed audio samples in a buffer, ready to be moved through the DAW."
+    },
+    {
+      "id": "non_elastic_scattering",
+      "label": "Non\u2011Elastic Scattering",
+      "core_invariant": "Momentum transfer to lattice with energy loss as phonons",
+      "jargon_blacklist": [
+        "scattering",
+        "elastic",
+        "lattice",
+        "energy"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Hard clipping distortion: abruptly truncates peaks, converting signal energy into harmonic noise."
+    },
+    {
+      "id": "ionic_crystal_lattice",
+      "label": "Ionic Crystal Lattice",
+      "core_invariant": "Periodic arrangement of positive ions forming a potential landscape",
+      "jargon_blacklist": [
+        "lattice",
+        "ionic",
+        "crystal",
+        "potential"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "The fixed grid of a sequencer's step matrix, providing the periodic framework for notes."
+    },
+    {
+      "id": "mechanical_drag",
+      "label": "Mechanical Drag",
+      "core_invariant": "Resistive force proportional to velocity, dissipating kinetic energy",
+      "jargon_blacklist": [
+        "drag",
+        "force",
+        "velocity",
+        "mechanical"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Sidechain compressor's attenuation curve: resists signal rise, pulling down volume."
+    },
+    {
+      "id": "terminal_drift_velocity",
+      "label": "Terminal Drift Velocity",
+      "core_invariant": "Steady\u2011state velocity where net force equals zero",
+      "jargon_blacklist": [
+        "drift",
+        "velocity",
+        "steady",
+        "terminal"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Steady RMS level after limiting: the constant output volume once dynamics are tamed."
+    },
+    {
+      "id": "electric_potential_difference",
+      "label": "Electric Potential Difference",
+      "core_invariant": "Energy per unit charge between two points",
+      "jargon_blacklist": [
+        "potential",
+        "difference",
+        "energy",
+        "charge"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Difference between pre\u2011fader and post\u2011fader levels: energy available to drive a track."
+    },
+    {
+      "id": "potential_gradient",
+      "label": "Potential Gradient",
+      "core_invariant": "Spatial derivative of electric potential",
+      "jargon_blacklist": [
+        "gradient",
+        "potential",
+        "spatial",
+        "derivative"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Slope of an automation curve: rate at which volume changes over time."
+    },
+    {
+      "id": "acceleration_between_collisions",
+      "label": "Acceleration Between Collisions",
+      "core_invariant": "Rate of change of velocity due to net force",
+      "jargon_blacklist": [
+        "acceleration",
+        "velocity",
+        "force",
+        "collision"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Attack time of a transient shaper: how quickly volume ramps up before hitting a limiter."
+    },
+    {
+      "id": "electric_current",
+      "label": "Electric Current",
+      "core_invariant": "Rate of charge flow per unit time",
+      "jargon_blacklist": [
+        "current",
+        "charge",
+        "flow",
+        "time"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Overall loudness meter reading: total charge of audio energy flowing per second."
+    },
+    {
+      "id": "carrier_number_density",
+      "label": "Carrier Number Density",
+      "core_invariant": "Number of charge carriers per unit volume",
+      "jargon_blacklist": [
+        "density",
+        "carrier",
+        "number",
+        "volume"
+      ],
+      "is_hobby_anchor": false,
+      "hobby_analogy": "Number of active voices in a polyphonic synth: density of sound sources."
+    }
+  ]
+}
