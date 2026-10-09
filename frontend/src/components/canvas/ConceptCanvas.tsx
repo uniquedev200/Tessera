@@ -22,13 +22,27 @@ import { BridgeEdge } from './edges/BridgeEdge';
 import { SteppingStoneEdge } from './edges/SteppingStoneEdge';
 import { NodeInspectionDrawer } from './drawer/NodeInspectionDrawer';
 import { useGraphStore } from '@/store/useGraphStore';
-import { Plus, Sparkles, RotateCcw, Compass, Trash2, Maximize2, Check, Puzzle, Lock } from 'lucide-react';
+import {
+  Plus,
+  Sparkles,
+  RotateCcw,
+  Compass,
+  Trash2,
+  Maximize2,
+  Check,
+  Puzzle,
+  Lock,
+  ChevronDown,
+  ChevronUp,
+  Layers,
+} from 'lucide-react';
 import { api } from '@/lib/api';
 
 const ConceptCanvasInner: React.FC<{ onOpenUpload: () => void; hideFloatingDrawer?: boolean }> = ({
   onOpenUpload,
   hideFloatingDrawer,
 }) => {
+  const [isLegendOpen, setIsLegendOpen] = React.useState(true);
   const {
     nodes,
     edges,
@@ -210,13 +224,33 @@ const ConceptCanvasInner: React.FC<{ onOpenUpload: () => void; hideFloatingDrawe
         proOptions={{ hideAttribution: true }}
       >
         <Background color="#171A21" gap={28} size={1} variant={BackgroundVariant.Dots} className="opacity-15" />
-        <Controls className="!bauhaus-glass !border-2 !border-bauhaus-ink !text-bauhaus-ink !shadow-[3px_3px_0px_#171A21] !rounded-xl overflow-hidden [&>button]:!border-bauhaus-border [&>button]:!bg-white [&>button:hover]:!bg-slate-100" />
+        <Controls
+          position="bottom-left"
+          showInteractive={false}
+          className="!bauhaus-glass !border-2 !border-bauhaus-ink !text-bauhaus-ink !shadow-[3px_3px_0px_#171A21] !rounded-xl overflow-hidden [&>button]:!border-b [&>button]:!border-bauhaus-border [&>button]:!bg-white [&>button:hover]:!bg-slate-100 !bottom-4 !left-4 !m-0 z-10"
+        />
         <MiniMap
-          nodeStrokeWidth={3}
+          nodeColor={(node: any) => {
+            if (node.type === 'chapterHull') return 'transparent';
+            if (node.type === 'hobbyAnchor' || node.data?.isHobbyAnchor || node.data?.is_hobby_anchor) return '#F59E0B';
+            const status = node.data?.status;
+            if (status === 'MASTERED') return '#10B981';
+            if (status === 'FRAGILE') return '#EF4444';
+            return '#38BDF8';
+          }}
+          nodeStrokeColor={(node: any) => {
+            if (node.type === 'chapterHull') return 'rgba(44, 53, 57, 0.3)';
+            return '#171A21';
+          }}
+          nodeStrokeWidth={2}
+          nodeBorderRadius={6}
+          maskColor="rgba(245, 241, 232, 0.65)"
+          maskStrokeColor="#171A21"
+          maskStrokeWidth={1.5}
+          position="bottom-right"
           zoomable
           pannable
-          className="!bauhaus-glass !border-2 !border-bauhaus-ink !rounded-xl !shadow-[3px_3px_0px_#171A21]"
-          maskColor="rgba(255, 255, 255, 0.7)"
+          className="!bauhaus-glass !border-2 !border-bauhaus-ink !rounded-xl !shadow-[3px_3px_0px_#171A21] !w-44 !h-32 !bottom-4 !right-4 !m-0 z-10"
         />
       </ReactFlow>
 
@@ -275,56 +309,61 @@ const ConceptCanvasInner: React.FC<{ onOpenUpload: () => void; hideFloatingDrawe
         </button>
       </div>
 
-      {/* Tactile Stone Archipelago Trail Legend and Active Anchor */}
-      <div className="absolute bottom-4 left-4 z-10 flex flex-col gap-2 pointer-events-none">
-        <div className="flex items-center space-x-2">
-          <div className="flex items-center space-x-2 px-3 py-1 rounded-lg bauhaus-glass border-2 border-bauhaus-ink shadow-[2px_2px_0px_#171A21] text-[10px] font-mono font-black text-bauhaus-ink uppercase tracking-wider">
-            <span className="w-2 h-2 rounded-full bg-bauhaus-blue" />
-            <span>Tessera // Cognitive Compiler</span>
+      {/* Tactile Stone Archipelago Trail Legend (Positioned with intentional clearance from Controls) */}
+      <div className="absolute bottom-4 left-16 z-10 flex items-center">
+        {isLegendOpen ? (
+          <div className="flex flex-wrap items-center gap-2.5 px-3 py-1.5 rounded-xl bauhaus-glass border-2 border-bauhaus-ink text-[11px] font-mono text-[#2C3539] shadow-[3px_3px_0px_#171A21] font-bold">
+            <div className="flex items-center space-x-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
+                <Check className="w-2 h-2 stroke-[3]" />
+              </div>
+              <span className="hidden sm:inline">Mastered</span>
+              <span className="sm:hidden">Moss</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0">
+                <Puzzle className="w-2 h-2 stroke-[3]" />
+              </div>
+              <span className="hidden sm:inline">Needs Tuning</span>
+              <span className="sm:hidden">Tuning</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-sky-600 text-white flex items-center justify-center shrink-0">
+                <Compass className="w-2 h-2 stroke-[3]" />
+              </div>
+              <span>Ready</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-slate-500 text-white flex items-center justify-center shrink-0">
+                <Lock className="w-2 h-2 stroke-[3]" />
+              </div>
+              <span>Locked</span>
+            </div>
+            <div className="flex items-center space-x-1.5">
+              <div className="w-3.5 h-3.5 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
+                <Sparkles className="w-2 h-2 stroke-[3]" />
+              </div>
+              <span>Bridge</span>
+            </div>
+            <button
+              onClick={() => setIsLegendOpen(false)}
+              className="ml-1 p-0.5 rounded hover:bg-slate-200/50 text-bauhaus-muted hover:text-bauhaus-ink transition-colors"
+              title="Collapse Legend"
+            >
+              <ChevronDown className="w-3.5 h-3.5" />
+            </button>
           </div>
-        </div>
-
-        {userProfile && (
-          <div className="flex items-center space-x-2 px-3 py-1.5 rounded-xl bauhaus-glass border-2 border-bauhaus-ink shadow-[3px_3px_0px_#171A21] text-bauhaus-ink text-xs font-mono font-bold">
-            <Compass className="w-3.5 h-3.5 text-amber-700 stroke-[2.5]" />
-            <span>
-              HOME BASE: <strong className="text-bauhaus-ink font-black uppercase">{userProfile.hobby_anchor}</strong>
-            </span>
-          </div>
+        ) : (
+          <button
+            onClick={() => setIsLegendOpen(true)}
+            className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bauhaus-glass border-2 border-bauhaus-ink text-xs font-mono font-bold text-bauhaus-ink shadow-[2px_2px_0px_#171A21] hover:bg-white transition-all"
+            title="Expand Legend"
+          >
+            <Layers className="w-3.5 h-3.5 text-bauhaus-blue" />
+            <span>Legend</span>
+            <ChevronUp className="w-3 h-3 text-bauhaus-muted" />
+          </button>
         )}
-
-        <div className="flex flex-wrap items-center gap-3 px-3.5 py-2 rounded-xl bauhaus-glass border-2 border-bauhaus-ink text-[11px] font-mono text-[#2C3539] shadow-[3px_3px_0px_#171A21] font-bold">
-          <div className="flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-emerald-600 text-white flex items-center justify-center shrink-0">
-              <Check className="w-2.5 h-2.5 stroke-[3]" />
-            </div>
-            <span>Mastered (Moss)</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-amber-600 text-white flex items-center justify-center shrink-0">
-              <Puzzle className="w-2.5 h-2.5 stroke-[3]" />
-            </div>
-            <span>Needs Tuning (Wobbly)</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-sky-600 text-white flex items-center justify-center shrink-0">
-              <Compass className="w-2.5 h-2.5 stroke-[3]" />
-            </div>
-            <span>Ready to Explore</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-slate-500 text-white flex items-center justify-center shrink-0">
-              <Lock className="w-2.5 h-2.5 stroke-[3]" />
-            </div>
-            <span>Mystery Milestone</span>
-          </div>
-          <div className="flex items-center space-x-1.5">
-            <div className="w-4 h-4 rounded-full bg-violet-600 text-white flex items-center justify-center shrink-0">
-              <Sparkles className="w-2.5 h-2.5 stroke-[3]" />
-            </div>
-            <span>Stepping-Stone Bridge</span>
-          </div>
-        </div>
       </div>
 
       {/* Rich Interactive Node Inspection Drawer */}

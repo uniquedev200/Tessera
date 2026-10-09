@@ -10,16 +10,18 @@ router = APIRouter(prefix="/api/onboarding", tags=["Onboarding"])
 async def create_guest_profile(payload: Optional[dict] = None):
     try:
         hobby = (payload or {}).get("hobby_anchor") or "Music Production"
-        guest_email = f"guest_{uuid.uuid4().hex[:10]}@tessera.edu"
+        guest_suffix = uuid.uuid4().hex[:8].upper()
+        guest_email = f"guest_{guest_suffix.lower()}@tessera.edu"
+        display_name = f"Learner #{guest_suffix[:4]}"
         profile = db.get_or_create_profile(
             email=guest_email,
-            display_name="Learner",
+            display_name=display_name,
             hobby_anchor=hobby
         )
         return ProfileResponse(
             id=str(profile["id"]),
             email=profile["email"],
-            display_name=profile.get("display_name") or "Learner",
+            display_name=profile.get("display_name") or display_name,
             hobby_anchor=profile.get("hobby_anchor") or hobby
         )
     except Exception as e:

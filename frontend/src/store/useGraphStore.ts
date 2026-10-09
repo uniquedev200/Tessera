@@ -154,6 +154,7 @@ interface GraphState {
   setLatestArtifact: (artifact: { bridge_label: string; real_world_artifact: string } | null) => void;
   setCurrentQuestion: (question: TwoTierQuestionPayload | null) => void;
   clearAllData: () => Promise<void>;
+  startNewGuestSession: (hobbyAnchor?: string) => Promise<Profile>;
 }
 
 export const useGraphStore = create<GraphState>()(
@@ -192,10 +193,66 @@ export const useGraphStore = create<GraphState>()(
 
       setUserProfile: (profile) => set({ userProfile: profile }),
 
+      startNewGuestSession: async (hobbyAnchor = 'Music Production') => {
+        set({
+          isLoading: true,
+          nodes: [],
+          edges: [],
+          chapters: [],
+          selectedConcept: null,
+          selectedNodeId: null,
+          isDrawerOpen: false,
+          activeModal: 'NONE',
+          currentMicroProbe: null,
+          antiJargonFlaggedWord: null,
+          rcaStage: 'IDLE',
+          rcaPathNodeIds: [],
+          rcaPathEdgeIds: [],
+          rcaSuspectNodeId: null,
+          rcaMicroProbe: null,
+          rcaSummary: null,
+          rcaBayesianAttribution: null,
+          activeTracePath: [],
+          latestArtifact: null,
+          userProfile: null,
+        });
+
+        let newProfile: Profile;
+        try {
+          newProfile = await api.createGuestProfile(hobbyAnchor);
+        } catch {
+          const guestId = typeof crypto !== 'undefined' && crypto.randomUUID
+            ? crypto.randomUUID().slice(0, 8)
+            : Math.random().toString(36).slice(2, 10);
+          newProfile = await api.createProfile(`guest_${guestId}@tessera.edu`, `Learner #${guestId.slice(0, 4).toUpperCase()}`, hobbyAnchor);
+        }
+
+        set({ userProfile: newProfile });
+
+        try {
+          await api.seedSampleChapter(newProfile.id, 1, newProfile.hobby_anchor || hobbyAnchor);
+        } catch (e) {
+          console.warn('Initial sample chapter seeding failed:', e);
+        }
+
+        await get().loadUserGraph(newProfile.id);
+        set({ isLoading: false, isInitialized: true });
+        return newProfile;
+      },
+
       initUserSession: async () => {
         let profile = get().userProfile;
 
-        // 1. If we already have a valid profile with a valid ID
+        // Invalidate legacy test profile (student@forgehacks.edu or any forgehacks test account)
+        const isLegacyTestProfile =
+          profile?.email === 'student@forgehacks.edu' ||
+          Boolean(profile?.email && profile.email.includes('forgehacks'));
+
+        if (isLegacyTestProfile || !profile?.id) {
+          return await get().startNewGuestSession(profile?.hobby_anchor || 'Music Production');
+        }
+
+        // If we already have a valid isolated guest profile with a valid ID
         if (profile?.id) {
           if (get().chapters.length === 0) {
             await get().loadUserGraph(profile.id);
@@ -212,28 +269,7 @@ export const useGraphStore = create<GraphState>()(
           return profile;
         }
 
-        // 2. Fresh visitor: Create isolated unique guest profile
-        try {
-          profile = await api.createGuestProfile('Music Production');
-        } catch {
-          const guestId = typeof crypto !== 'undefined' && crypto.randomUUID
-            ? crypto.randomUUID().slice(0, 8)
-            : Math.random().toString(36).slice(2, 10);
-          profile = await api.createProfile(`guest_${guestId}@tessera.edu`, 'Learner', 'Music Production');
-        }
-
-        set({ userProfile: profile });
-
-        // 3. Immediately seed Sample Chapter 1 so the visitor starts with a populated, interactive quest map
-        try {
-          await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
-        } catch (e) {
-          console.warn('Initial sample chapter seeding failed:', e);
-        }
-
-        // 4. Load the graph
-        await get().loadUserGraph(profile.id);
-        return profile;
+        return await get().startNewGuestSession('Music Production');
       },
 
       loadUserGraph: async (userId: string) => {

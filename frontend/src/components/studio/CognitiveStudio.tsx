@@ -25,6 +25,7 @@ import {
   Send,
   Bot,
   User,
+  UserPlus,
   Plus,
   Zap,
   ChevronRight,
@@ -132,6 +133,7 @@ function CognitiveStudioInner() {
     userProfile,
     setUserProfile,
     initUserSession,
+    startNewGuestSession,
     nodes,
     edges,
     chapters,
@@ -504,6 +506,32 @@ function CognitiveStudioInner() {
             <span className="flex items-center space-x-1 text-bauhaus-muted" title="Ready to Explore">
               <span>{unverifiedCount}R</span>
             </span>
+          </div>
+
+          {/* Guest Learner Profile & Session Badge */}
+          <div className="flex items-center space-x-1.5 px-2.5 py-1.5 rounded-xl bg-white/90 border-2 border-bauhaus-ink shadow-[2px_2px_0px_#171A21] text-xs font-mono font-bold">
+            <div className="w-5 h-5 rounded-full bg-bauhaus-ink text-white flex items-center justify-center text-[10px] font-black shrink-0">
+              <User className="w-3 h-3 text-bauhaus-green" />
+            </div>
+            <div className="hidden sm:flex flex-col text-left leading-none">
+              <span className="text-[10px] font-bold text-bauhaus-ink truncate max-w-[85px]">
+                {userProfile?.display_name || 'Learner'}
+              </span>
+              <span className="text-[8px] text-bauhaus-muted font-mono truncate max-w-[85px]">
+                {userProfile?.email ? userProfile.email.split('@')[0] : 'guest_session'}
+              </span>
+            </div>
+            <button
+              onClick={async () => {
+                if (window.confirm('Start a new isolated guest session? This generates a fresh profile and seeds Chapter 1.')) {
+                  await startNewGuestSession();
+                }
+              }}
+              className="p-0.5 rounded hover:bg-slate-100 text-bauhaus-muted hover:text-bauhaus-blue transition-colors"
+              title="Start Fresh Guest Session (New Isolated Profile)"
+            >
+              <UserPlus className="w-3.5 h-3.5" />
+            </button>
           </div>
 
           {/* Active Hobby Grounding Selector */}
