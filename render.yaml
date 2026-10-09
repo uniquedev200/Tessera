@@ -1,0 +1,34 @@
+services:
+  - type: web
+    name: tessera-backend
+    runtime: python
+    rootDir: backend
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    plan: free
+    healthCheckPath: /health
+    envVars:
+      - key: PYTHON_VERSION
+        value: 3.11.9
+      - key: ENVIRONMENT
+        value: production
+      - key: CORS_ORIGINS
+        value: "*"
+      - key: GROQ_MODEL_70B
+        value: openai/gpt-oss-120b
+      - key: GROQ_MODEL_32B
+        value: qwen/qwen3.8-27b
+      - key: GROQ_API_KEY_70B
+        sync: false
+      - key: GROQ_API_KEY_32B
+        sync: false
+      - key: DATABASE_URL
+        sync: false
+      - key: SUPABASE_URL
+        sync: false
+      - key: SUPABASE_KEY
+        sync: false
+      - key: UPSTASH_VECTOR_REST_URL
+        sync: false
+      - key: UPSTASH_VECTOR_REST_TOKEN
+        sync: false
