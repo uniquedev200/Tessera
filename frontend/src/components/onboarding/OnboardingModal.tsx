@@ -12,6 +12,7 @@ import {
   ArrowRight,
   BrainCircuit,
   Loader2,
+  X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { useGraphStore } from '@/store/useGraphStore';
@@ -127,6 +128,16 @@ export const OnboardingModal: React.FC<{ isOpen: boolean; onComplete: () => void
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm p-4 animate-fadeIn">
       <div className="relative w-full max-w-2xl rounded-2xl border-2 border-bauhaus-ink bg-white/95 backdrop-blur-md p-7 shadow-[8px_8px_0px_#171A21]">
+        {/* Close Button */}
+        <button
+          onClick={onComplete}
+          disabled={isSubmitting}
+          className="absolute top-5 right-5 p-1.5 rounded-xl border-2 border-bauhaus-ink bg-white hover:bg-slate-100 text-bauhaus-ink shadow-[2px_2px_0px_#171A21] hover:shadow-[3px_3px_0px_#171A21] hover:-translate-y-0.5 transition-all disabled:opacity-50"
+          title="Close hobby selection"
+        >
+          <X className="w-4 h-4" />
+        </button>
+
         {/* Header */}
         <div className="flex items-center space-x-3 mb-2">
           <div className="w-10 h-10 rounded-xl bg-bauhaus-ink text-white flex items-center justify-center border-2 border-bauhaus-ink shadow-[2px_2px_0px_#171A21]">

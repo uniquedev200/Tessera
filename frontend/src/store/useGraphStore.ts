@@ -217,14 +217,19 @@ export const useGraphStore = create<GraphState>()(
           userProfile: null,
         });
 
+        // Generate brand new unique device ID for this session
+        const newDeviceId = typeof crypto !== 'undefined' && crypto.randomUUID
+          ? `dev_${crypto.randomUUID()}`
+          : `dev_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('tessera_device_id', newDeviceId);
+        }
+
         let newProfile: Profile;
         try {
-          newProfile = await api.createGuestProfile(hobbyAnchor);
+          newProfile = await api.createOrGetDeviceProfile(newDeviceId, hobbyAnchor);
         } catch {
-          const guestId = typeof crypto !== 'undefined' && crypto.randomUUID
-            ? crypto.randomUUID().slice(0, 8)
-            : Math.random().toString(36).slice(2, 10);
-          newProfile = await api.createProfile(`guest_${guestId}@tessera.edu`, `Learner #${guestId.slice(0, 4).toUpperCase()}`, hobbyAnchor);
+          newProfile = await api.createProfile(`device_${newDeviceId}@tessera.edu`, `Explorer #${newDeviceId.slice(-4).toUpperCase()}`, hobbyAnchor);
         }
 
         set({ userProfile: newProfile });
@@ -248,11 +253,36 @@ export const useGraphStore = create<GraphState>()(
           profile?.email === 'student@forgehacks.edu' ||
           Boolean(profile?.email && profile.email.includes('forgehacks'));
 
-        if (isLegacyTestProfile || !profile?.id) {
-          return await get().startNewGuestSession(profile?.hobby_anchor || 'Music Production');
+        // Retrieve or generate persistent device ID
+        let deviceId = typeof window !== 'undefined' ? localStorage.getItem('tessera_device_id') : null;
+        if (!deviceId) {
+          deviceId = typeof crypto !== 'undefined' && crypto.randomUUID
+            ? `dev_${crypto.randomUUID()}`
+            : `dev_${Math.random().toString(36).substring(2, 10)}_${Date.now()}`;
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('tessera_device_id', deviceId);
+          }
         }
 
-        // If we already have a valid isolated guest profile with a valid ID
+        if (isLegacyTestProfile || !profile?.id) {
+          set({
+            nodes: [],
+            edges: [],
+            chapters: [],
+            userProfile: null,
+          });
+          try {
+            profile = await api.createOrGetDeviceProfile(deviceId, profile?.hobby_anchor || 'Music Production');
+            set({ userProfile: profile });
+            await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
+            await get().loadUserGraph(profile.id);
+            return profile;
+          } catch (e) {
+            return await get().startNewGuestSession(profile?.hobby_anchor || 'Music Production');
+          }
+        }
+
+        // If we already have a valid isolated device profile
         if (profile?.id) {
           if (get().chapters.length === 0) {
             await get().loadUserGraph(profile.id);

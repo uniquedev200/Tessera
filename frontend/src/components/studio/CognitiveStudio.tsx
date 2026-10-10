@@ -714,26 +714,6 @@ function CognitiveStudioInner() {
               hideFloatingDrawer={!isMaximized}
             />
           )}
-
-          {/* Floating Maximize Button in Bottom Left of Canvas */}
-          <div className="absolute bottom-4 left-4 z-10 flex items-center space-x-2">
-            <button
-              onClick={() => setIsMaximized(!isMaximized)}
-              className="flex items-center space-x-1.5 px-3.5 py-1.5 rounded-xl bauhaus-glass border-2 border-bauhaus-ink text-bauhaus-ink text-xs font-mono font-bold shadow-[2px_2px_0px_#171A21] hover:shadow-[3px_3px_0px_#171A21] hover:-translate-y-0.5 transition-all"
-            >
-              {isMaximized ? (
-                <>
-                  <Minimize2 className="w-3.5 h-3.5" />
-                  <span>Restore Workflow Hub</span>
-                </>
-              ) : (
-                <>
-                  <Maximize2 className="w-3.5 h-3.5" />
-                  <span>Maximize Graph Canvas</span>
-                </>
-              )}
-            </button>
-          </div>
         </main>
 
         {/* RIGHT PANE: Workflow & Diagnostic Hub */}

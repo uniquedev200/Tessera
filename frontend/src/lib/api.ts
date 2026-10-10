@@ -58,6 +58,13 @@ export const api = {
     });
   },
 
+  async createOrGetDeviceProfile(deviceId: string, hobbyAnchor: string = 'Music Production'): Promise<Profile> {
+    return fetchJson<Profile>('/api/onboarding/device', {
+      method: 'POST',
+      body: JSON.stringify({ device_id: deviceId, hobby_anchor: hobbyAnchor }),
+    });
+  },
+
   async updateHobby(userId: string, hobbyAnchor: string): Promise<{ status: string; updated_count?: number; updated_nodes?: any[] }> {
     return fetchJson('/api/user/hobby', {
       method: 'POST',

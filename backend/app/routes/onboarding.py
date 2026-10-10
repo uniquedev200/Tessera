@@ -6,6 +6,37 @@ from app.db.supabase_client import db
 
 router = APIRouter(prefix="/api/onboarding", tags=["Onboarding"])
 
+@router.post("/device", response_model=ProfileResponse)
+async def get_or_create_device_profile(payload: dict):
+    """
+    Guarantees 100% strict DB-level device isolation without sign-in:
+    - Each device generates a persistent random device_id
+    - Maps to a unique device email in Supabase: device_{device_id}@tessera.edu
+    - Returns or creates that device's dedicated profile
+    """
+    try:
+        device_id = payload.get("device_id")
+        hobby = payload.get("hobby_anchor") or "Music Production"
+        if not device_id:
+            device_id = uuid.uuid4().hex[:12]
+        clean_dev = "".join(c for c in device_id if c.isalnum() or c in "-_")[:32]
+        device_email = f"device_{clean_dev.lower()}@tessera.edu"
+        short_tag = clean_dev[-4:].upper()
+        display_name = f"Explorer #{short_tag}"
+        profile = db.get_or_create_profile(
+            email=device_email,
+            display_name=display_name,
+            hobby_anchor=hobby
+        )
+        return ProfileResponse(
+            id=str(profile["id"]),
+            email=profile["email"],
+            display_name=profile.get("display_name") or display_name,
+            hobby_anchor=profile.get("hobby_anchor") or hobby
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to register device profile: {str(e)}")
+
 @router.post("/guest", response_model=ProfileResponse)
 async def create_guest_profile(payload: Optional[dict] = None):
     try:

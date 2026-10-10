@@ -26,7 +26,10 @@ async def update_hobby(payload: UpdateHobbyRequest):
         # 1. Update Profile in DB
         profile = db.update_profile_hobby(payload.user_id, payload.new_hobby)
         if not profile:
-            profile = db.get_or_create_profile(email="student@forgehacks.edu", hobby_anchor=payload.new_hobby)
+            existing = db.get_profile(payload.user_id)
+            if not existing:
+                raise HTTPException(status_code=404, detail=f"User profile '{payload.user_id}' not found")
+            profile = existing
 
         # 2. Fetch existing concepts for this user
         concepts = db.get_all_concepts_for_user(payload.user_id)
