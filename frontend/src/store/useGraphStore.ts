@@ -282,24 +282,34 @@ export const useGraphStore = create<GraphState>()(
           }
         }
 
-        // If we already have a valid isolated device profile
-        if (profile?.id) {
-          if (get().chapters.length === 0) {
+        // Validate that this device's profile exists in DB (handles DB resets gracefully)
+        try {
+          const syncedProfile = await api.createOrGetDeviceProfile(deviceId, profile?.hobby_anchor || 'Music Production');
+          if (syncedProfile.id !== profile.id) {
+            // Profile was reset in DB: cleanly re-seed for the new profile ID
+            profile = syncedProfile;
+            set({ userProfile: syncedProfile, nodes: [], edges: [], chapters: [] });
+            await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
             await get().loadUserGraph(profile.id);
-            // If user has no chapters yet, seed Sample Chapter 1
-            if (get().chapters.length === 0) {
-              try {
-                await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
-                await get().loadUserGraph(profile.id);
-              } catch (e) {
-                console.warn('Initial sample chapter seeding failed:', e);
-              }
-            }
+            return profile;
           }
-          return profile;
+        } catch (e) {
+          console.warn('Device profile sync fallback:', e);
         }
 
-        return await get().startNewGuestSession('Music Production');
+        if (get().chapters.length === 0) {
+          await get().loadUserGraph(profile.id);
+          // If user has no chapters yet, seed Sample Chapter 1
+          if (get().chapters.length === 0) {
+            try {
+              await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
+              await get().loadUserGraph(profile.id);
+            } catch (e) {
+              console.warn('Initial sample chapter seeding failed:', e);
+            }
+          }
+        }
+        return profile;
       },
 
       loadUserGraph: async (userId: string) => {

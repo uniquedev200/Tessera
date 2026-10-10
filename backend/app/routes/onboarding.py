@@ -97,3 +97,20 @@ async def update_hobby_anchor(payload: dict):
     if not updated:
         raise HTTPException(status_code=404, detail="Profile not found")
     return {"status": "success", "hobby_anchor": hobby_anchor}
+
+@router.post("/reset-all")
+async def reset_all_profiles():
+    """
+    Clears all profiles, chapters, concept nodes, edges, epistemic states, and logs in DB.
+    """
+    try:
+        with db.get_cursor(commit=True) as cur:
+            cur.execute("DELETE FROM assessment_logs;")
+            cur.execute("DELETE FROM student_epistemic_states;")
+            cur.execute("DELETE FROM concept_edges;")
+            cur.execute("DELETE FROM concept_nodes;")
+            cur.execute("DELETE FROM chapters;")
+            cur.execute("DELETE FROM profiles;")
+        return {"status": "ok", "message": "All profiles and graph records have been reset."}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Failed to reset profiles: {str(e)}")
