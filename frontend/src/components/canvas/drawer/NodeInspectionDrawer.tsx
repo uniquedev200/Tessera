@@ -547,7 +547,7 @@ export const NodeInspectionDrawer: React.FC = () => {
           )
         )}
 
-        {/* SECTION 6: Socratic Concept Assistant (Collapsible) */}
+        {/* SECTION 6: Tessella Concept Assistant (Collapsible) */}
         <section className="pt-2 border-t-2 border-bauhaus-ink">
           <button
             onClick={() => setIsChatExpanded(!isChatExpanded)}
@@ -555,7 +555,7 @@ export const NodeInspectionDrawer: React.FC = () => {
           >
             <div className="flex items-center space-x-2">
               <Bot className="w-4 h-4 text-bauhaus-amber" />
-              <span>Socratic Assistant ({hobby})</span>
+              <span>Tessella ({hobby})</span>
             </div>
             {isChatExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
@@ -565,7 +565,7 @@ export const NodeInspectionDrawer: React.FC = () => {
               <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                 {messages.length === 0 && (
                   <p className="text-xs text-bauhaus-muted italic p-3 rounded-xl bg-white border-2 border-bauhaus-ink font-sans">
-                    Ask any question about {conceptTitle}. The tutor will explain the core invariant using analogies to {hobby}.
+                    Ask Tess any question about {conceptTitle}. She will explain the core mechanism using analogies to {hobby}.
                   </p>
                 )}
                 {messages.map((msg, i) => (
@@ -583,7 +583,7 @@ export const NodeInspectionDrawer: React.FC = () => {
                       ) : (
                         <Bot className="w-3 h-3 text-bauhaus-amber" />
                       )}
-                      <span>{msg.role === 'user' ? 'You' : 'Socratic Tutor'}</span>
+                      <span>{msg.role === 'user' ? 'You' : 'Tessella (Tess)'}</span>
                     </div>
                     {msg.content}
                   </div>
@@ -599,7 +599,7 @@ export const NodeInspectionDrawer: React.FC = () => {
               <form onSubmit={handleSendMessage} className="flex items-center space-x-1.5">
                 <input
                   type="text"
-                  placeholder={`Ask how this relates to ${hobby}...`}
+                  placeholder={`Ask Tess how this relates to ${hobby}...`}
                   value={inputMessage}
                   onChange={(e) => setInputMessage(e.target.value)}
                   className="flex-1 rounded-xl border-2 border-bauhaus-ink bg-white px-3.5 py-2 text-xs font-mono text-bauhaus-ink placeholder-bauhaus-muted focus:outline-none focus:ring-2 focus:ring-bauhaus-blue"

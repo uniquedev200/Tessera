@@ -107,14 +107,14 @@ export const OnboardingModal: React.FC<{ isOpen: boolean; onComplete: () => void
         await updateUserHobby(activeHobby);
         await loadUserGraph(userProfile.id);
       } else {
-        const guestEmail = email.trim() || `guest_${typeof crypto !== 'undefined' && crypto.randomUUID ? crypto.randomUUID().slice(0, 8) : Math.random().toString(36).slice(2, 10)}@tessera.edu`;
-        const profile = await api.createProfile(guestEmail, guestEmail.split('@')[0], activeHobby);
-        setUserProfile(profile);
-        try {
-          await api.seedSampleChapter(profile.id, 1, activeHobby);
-        } catch (e) {
-          console.warn('Initial sample chapter seeding failed:', e);
+        const deviceId = typeof window !== 'undefined' && localStorage.getItem('tessera_device_id')
+          ? localStorage.getItem('tessera_device_id')!
+          : `dev_${Math.random().toString(36).slice(2, 10)}_${Date.now()}`;
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('tessera_device_id', deviceId);
         }
+        const profile = await api.createOrGetDeviceProfile(deviceId, activeHobby);
+        setUserProfile(profile);
         await loadUserGraph(profile.id);
       }
       onComplete();

@@ -214,10 +214,9 @@ function CognitiveStudioInner() {
   const chatRotatingText = useRotatingMessages(
     useMemo(
       () => [
-        'Retrieving syllabus context & textbook vector chunks...',
-        `Consulting epistemic invariants in ${activeHobby}...`,
-        'Synthesizing rigorous Socratic explanation...',
-        'Formatting verified textbook citations...',
+        'Tessella is analyzing causal mechanisms...',
+        `Mapping physical invariants to ${activeHobby}...`,
+        `Crafting ${activeHobby} analogy & explanation...`,
       ],
       [activeHobby]
     ),
@@ -393,7 +392,7 @@ function CognitiveStudioInner() {
         ...prev,
         {
           role: 'assistant',
-          content: 'Socratic Tutor Notice: ' + (err.message || 'Unable to establish causal feedback loop.'),
+          content: 'Tessella Notice: ' + (err.message || 'Unable to establish causal feedback loop.'),
         },
       ]);
     } finally {
@@ -762,7 +761,7 @@ function CognitiveStudioInner() {
                 }`}
               >
                 <Bot className="w-3.5 h-3.5 text-bauhaus-amber" />
-                <span>Socratic</span>
+                <span>Tessella</span>
               </button>
             </div>
 
@@ -1016,13 +1015,13 @@ function CognitiveStudioInner() {
                           setActiveTab('chat');
                           handleSendChatMessage(
                             undefined,
-                            `Can you explain ${selectedConcept.label} using an analogy from ${activeHobby}? What is the core physical invariant?`
+                            `Explain ${selectedConcept.label} and give me a detailed ${activeHobby} analogy for how it works.`
                           );
                         }}
                         className="w-full flex items-center justify-center space-x-1.5 p-2.5 rounded-xl bg-white hover:bg-amber-50 border-2 border-bauhaus-ink text-bauhaus-ink font-mono font-bold text-xs shadow-[2px_2px_0px_#171A21] hover:shadow-[3px_3px_0px_#171A21] hover:-translate-y-0.5 transition-all"
                       >
                         <Bot className="w-3.5 h-3.5 text-bauhaus-amber" />
-                        <span>Ask Socratic Quest Mentor</span>
+                        <span>Ask Tessella (Tess)</span>
                       </button>
                     </div>
                   </>
@@ -1156,7 +1155,7 @@ function CognitiveStudioInner() {
               </div>
             )}
 
-            {/* TAB CONTENT 3: SOCRATIC STUDY CHAT */}
+            {/* TAB CONTENT 3: TESSELLA STUDY CHAT */}
             {activeTab === 'chat' && (
               <div className="flex-1 flex flex-col h-full overflow-hidden">
                 {/* Chat History */}
@@ -1167,9 +1166,9 @@ function CognitiveStudioInner() {
                       <Bot className="w-4 h-4 text-bauhaus-green" />
                     </div>
                     <div className="p-3.5 rounded-xl bg-white/95 border-2 border-bauhaus-ink shadow-[2px_2px_0px_#171A21] text-xs text-bauhaus-ink space-y-1 max-w-[85%]">
-                      <p className="font-bold text-bauhaus-ink font-mono">Socratic Epistemic Companion</p>
+                      <p className="font-bold text-bauhaus-ink font-mono">Tessella (Tess)</p>
                       <p className="leading-relaxed font-sans">
-                        I answer mechanistic questions across any concept in your syllabus, cite the authoritative source chapters/PDFs (NotebookLM/Gemini style), and can translate concepts into <strong>{activeHobby}</strong> when requested.
+                        Hi! I&apos;m <strong>Tess</strong>, your cognitive companion. Ask me to explain any concept in your graph, break down how concepts connect, or translate ideas into a vivid <strong>{activeHobby}</strong> analogy.
                       </p>
                     </div>
                   </div>
@@ -1226,7 +1225,7 @@ function CognitiveStudioInner() {
                         onClick={() =>
                           handleSendChatMessage(
                             undefined,
-                            `Explain the fundamental physical mechanism of ${selectedConcept.label}.`
+                            `Explain the core physical mechanism of ${selectedConcept.label} simply.`
                           )
                         }
                         className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
@@ -1237,38 +1236,62 @@ function CognitiveStudioInner() {
                         onClick={() =>
                           handleSendChatMessage(
                             undefined,
-                            `Explain ${selectedConcept.label} using an analogy to ${activeHobby}.`
+                            `Give me a detailed ${activeHobby} analogy for ${selectedConcept.label}.`
                           )
                         }
                         className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
                       >
                         Analogy to {activeHobby}
                       </button>
+                      <button
+                        onClick={() =>
+                          handleSendChatMessage(
+                            undefined,
+                            `How does ${selectedConcept.label} connect to other concepts in this chapter?`
+                          )
+                        }
+                        className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
+                      >
+                        How it Connects
+                      </button>
                     </>
                   ) : (
-                    <button
-                      onClick={() =>
-                        handleSendChatMessage(
-                          undefined,
-                          'What are the primary physical conservation laws across this syllabus?'
-                        )
-                      }
-                      className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
-                    >
-                      Summarize Invariant Laws
-                    </button>
+                    <>
+                      <button
+                        onClick={() =>
+                          handleSendChatMessage(
+                            undefined,
+                            'Explain the main concepts in this chapter and how they work together.'
+                          )
+                        }
+                        className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-blue-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
+                      >
+                        Explain Core Concepts
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleSendChatMessage(
+                            undefined,
+                            `Explain the key concepts of this chapter using an analogy to ${activeHobby}.`
+                          )
+                        }
+                        className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-amber-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
+                      >
+                        Analogy to {activeHobby}
+                      </button>
+                      <button
+                        onClick={() =>
+                          handleSendChatMessage(
+                            undefined,
+                            `Give me a practical example of these concepts in action using ${activeHobby}.`
+                          )
+                        }
+                        className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
+                      >
+                        {activeHobby} Example
+                      </button>
+                    </>
                   )}
-                  <button
-                    onClick={() =>
-                      handleSendChatMessage(
-                        undefined,
-                        'Cite the syllabus sections and explain how drift velocity connects to current continuity.'
-                      )
-                    }
-                    className="whitespace-nowrap px-2.5 py-1 rounded-lg bg-white hover:bg-slate-50 border border-bauhaus-ink text-[10px] font-mono font-bold text-bauhaus-ink shadow-[1px_1px_0px_#171A21]"
-                  >
-                    Cite Syllabus Sources
-                  </button>
                 </div>
 
                 {/* Chat Input */}
@@ -1282,8 +1305,8 @@ function CognitiveStudioInner() {
                     onChange={(e) => setChatInput(e.target.value)}
                     placeholder={
                       selectedConcept
-                        ? `Ask about ${selectedConcept.label}...`
-                        : 'Ask Socratic tutor...'
+                        ? `Ask Tess about ${selectedConcept.label}...`
+                        : 'Ask Tessella (Tess)...'
                     }
                     className="flex-1 px-3.5 py-2.5 rounded-xl bg-white border-2 border-bauhaus-ink text-xs font-mono text-bauhaus-ink placeholder-bauhaus-muted focus:outline-none focus:ring-2 focus:ring-bauhaus-blue"
                   />

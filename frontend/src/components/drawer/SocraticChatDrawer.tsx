@@ -179,17 +179,17 @@ export const SocraticChatDrawer: React.FC = () => {
           </button>
         )}
 
-        {/* Socratic Assistant Chat Stream */}
+        {/* Tessella Assistant Chat Stream */}
         <div className="pt-3 border-t border-slate-800">
           <div className="text-xs font-mono uppercase tracking-wider text-slate-400 font-bold mb-3 flex items-center space-x-1.5">
             <Bot className="w-4 h-4 text-purple-400" />
-            <span>Socratic Concept Assistant</span>
+            <span>Tessella (Tess)</span>
           </div>
 
           <div className="space-y-3 mb-3 max-h-56 overflow-y-auto pr-1">
             {messages.length === 0 && (
               <p className="text-xs text-slate-400 italic">
-                Ask any question about this mechanism. The tutor will answer using analogies to {hobby}.
+                Ask Tess any question about this mechanism. She will answer using analogies to {hobby}.
               </p>
             )}
             {messages.map((msg, i) => (
@@ -203,7 +203,7 @@ export const SocraticChatDrawer: React.FC = () => {
               >
                 <div className="flex items-center space-x-1.5 text-[10px] font-mono text-slate-400 mb-1">
                   {msg.role === 'user' ? <User className="w-3 h-3 text-blue-400" /> : <Bot className="w-3 h-3 text-purple-400" />}
-                  <span>{msg.role === 'user' ? 'You' : 'Socratic Tutor'}</span>
+                  <span>{msg.role === 'user' ? 'You' : 'Tessella (Tess)'}</span>
                 </div>
                 {msg.content}
               </div>
@@ -220,7 +220,7 @@ export const SocraticChatDrawer: React.FC = () => {
           <form onSubmit={handleSendMessage} className="flex items-center space-x-2">
             <input
               type="text"
-              placeholder={`Ask how this relates to ${hobby}...`}
+              placeholder={`Ask Tess how this relates to ${hobby}...`}
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
               className="flex-1 rounded-xl border border-slate-800 bg-slate-950 px-3 py-2 text-xs text-slate-200 placeholder-slate-500 focus:border-purple-500 focus:outline-none"

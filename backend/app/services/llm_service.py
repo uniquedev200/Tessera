@@ -389,68 +389,72 @@ class LLMService:
         history: Optional[List[Dict[str, str]]] = None,
     ) -> str:
         """
-        Socratic Epistemic Companion:
-        Answers ANY question across the syllabus.
-        - Grounded in causal mechanisms and physical invariants.
-        - ONLY uses gaming/hobby analogies if explicitly requested, but offers them at the end.
-        - Provides Gemini / NotebookLM style syllabus citations at the end.
+        Tessella (Tess) — Cognitive Companion:
+        Answers questions across the syllabus grounded in causal mechanisms,
+        physical invariants, and vivid analogies to the user's hobby_anchor.
         """
+        self._ensure_clients()
+
         concept_context = ""
         if active_concept:
-            concept_context = f"Concept Focus: '{active_concept.get('label')}' (Invariant: {active_concept.get('core_invariant', '')})\n"
+            existing_analogy = active_concept.get("hobby_analogy") or ""
+            concept_context = (
+                f"Active Concept: '{active_concept.get('label')}'\n"
+                f"Core Invariant: {active_concept.get('core_invariant', '')}\n"
+            )
+            if existing_analogy:
+                concept_context += f"Reference {hobby_anchor} Analogy: {existing_analogy}\n"
 
         curriculum_overview = ""
         if all_concepts:
-            concept_names = [c.get('label', '') for c in all_concepts[:6] if c.get('label')]
-            curriculum_overview = f"Syllabus: {', '.join(concept_names)}\n"
+            concept_names = [c.get('label', '') for c in all_concepts[:8] if c.get('label')]
+            curriculum_overview = f"Chapter Concepts: {', '.join(concept_names)}\n"
 
         sources_context = ""
-        citation_candidates = []
-        if active_concept:
-            ch_title = active_concept.get("chapter_title", "Textbook Chapter")
-            sec_name = active_concept.get("label", "Core Invariant")
-            citation_candidates.append(f"{ch_title}, Section: {sec_name}")
-
         if retrieved_chunks:
-            sources_context = "Textbook References:\n"
+            sources_context = "Relevant Context:\n"
             for idx, chk in enumerate(retrieved_chunks[:2]):
-                ch_title = chk.get("chapter_title", "Textbook Syllabus")
+                ch_title = chk.get("chapter_title", "Chapter")
                 sec_name = chk.get("section_title") or chk.get("subject", "Physics")
-                sec_text = chk.get("text", "")[:220].strip()
+                sec_text = chk.get("text", "")[:250].strip()
                 sources_context += f"[{idx+1}] {ch_title} ({sec_name}): {sec_text}\n"
-                cit = f"{ch_title}, Section: {sec_name}"
-                if cit not in citation_candidates:
-                    citation_candidates.append(cit)
-        elif all_concepts:
-            for c in all_concepts[:2]:
-                ch_title = c.get("chapter_title", "Textbook Syllabus")
-                cit = f"{ch_title}, Section: {c.get('label')}"
-                if cit not in citation_candidates:
-                    citation_candidates.append(cit)
+
+        q_lower = (user_question or "").lower()
+        wants_analogy = any(
+            kw in q_lower
+            for kw in ["analogy", "analogies", "hobby", "like in", "relate", "example", "yes", "sure", hobby_anchor.lower()]
+        )
+
+        if wants_analogy:
+            analogy_instruction = (
+                f"5. {hobby_anchor.upper()} ANALOGY (HIGHEST PRIORITY): The student is asking for an analogy or connection to '{hobby_anchor}'. "
+                f"You MUST provide a vivid, concrete, step-by-step **{hobby_anchor} Analogy** that maps the exact physical variables and causal mechanism onto '{hobby_anchor}'. Never defer or ask if they want an analogy—give the full analogy immediately!\n"
+            )
+        else:
+            analogy_instruction = (
+                f"5. {hobby_anchor.upper()} GROUNDING: After explaining the physical mechanism, include a brief, intuitive **{hobby_anchor} Analogy** paragraph showing how this exact mechanism behaves in '{hobby_anchor}'.\n"
+            )
 
         system_prompt = (
-            "You are EPISTEME Socratic Epistemic Companion, an elite university physics/science AI tutor.\n"
-            f"Cognitive Anchor: '{hobby_anchor}'.\n"
+            "You are Tessella (or just Tess), the Tessera Cognitive Companion and AI Physics/STEM Mentor.\n"
+            f"Student's Cognitive Hobby Anchor: '{hobby_anchor}'.\n"
             "RULES (MANDATORY):\n"
-            "1. NO '#' HEADINGS: Use clean bold titles like **1. Driving Field**, **2. Lattice Drag**.\n"
+            "1. NO '#' HEADINGS: Use clean bold titles like **Core Mechanism** and "
+            f"**{hobby_anchor} Analogy**.\n"
             "2. NO RAW LATEX OR '$': Use plain unicode math (e.g. E = -ΔV/Δx, F = q·E, vd = μ·E, J = n·q·vd, ∇·J = 0).\n"
             "3. NO '//' CODE SLASHES.\n"
-            "4. TOPIC-FOCUSED & CONCISE: Explain the physical/causal mechanism in 2 concise paragraphs. Conclude with 1 insightful causal question.\n"
-            f"5. ANALOGY POLICY: Ground in pure physics first. At the very end, offer: '💡 *Would you like me to ground this in an analogy to {hobby_anchor}?*'\n"
-            "6. CITATIONS: Always end with:\n"
-            "📚 **Verified Sources:**\n"
-            "• [Source: <Chapter>, Section: <Section>]\n"
+            "4. CLEAR & CAUSAL: Explain the physical mechanism clearly in 1-2 short paragraphs, followed by the hobby analogy, and end with 1 short thought-provoking follow-up question.\n"
+            + analogy_instruction
         )
 
         user_prompt = f"{concept_context}{curriculum_overview}{sources_context}Student Question: {user_question}"
         messages = [{"role": "system", "content": system_prompt}]
         if history:
-            # Keep only last 3 messages and compress previous assistant messages to save tokens
-            for h in history[-3:]:
+            for h in history[-4:]:
                 role = h.get("role", "user")
                 content = h.get("content", "")
-                if role == "assistant" and len(content) > 500:
-                    content = content[:500] + "..."
+                if role == "assistant" and len(content) > 600:
+                    content = content[:600] + "..."
                 messages.append({"role": role, "content": content})
         messages.append({"role": "user", "content": user_prompt})
 
@@ -460,22 +464,25 @@ class LLMService:
                 res = self.client_32b.chat.completions.create(
                     model=model,
                     messages=messages,
-                    temperature=0.3,
-                    max_tokens=420
+                    temperature=0.35,
+                    max_tokens=800
                 )
                 raw_reply = res.choices[0].message.content or ""
-                break
+                if raw_reply.strip():
+                    break
             except Exception as e:
-                logger.warning(f"Socratic chat call failed with {model}: {e}")
+                logger.warning(f"Tessella chat call failed with {model}: {e}")
                 continue
 
         if not raw_reply:
-            return "I apologize, our cognitive tutor is momentarily recalibrating. Please try asking again."
+            return "I apologize, Tessella is momentarily recalibrating. Please try asking again."
 
-        # Robust post-processing sanitizer: remove any stray hashtags, latex symbols, or code slashes
         import re
 
-        def sanitize_socratic_output(text: str, fallback_citations: List[str]) -> str:
+        def sanitize_socratic_output(text: str) -> str:
+            # 0. Remove any <think>...</think> blocks from reasoning models
+            text = re.sub(r'<think>[\s\S]*?</think>', '', text, flags=re.IGNORECASE).strip()
+
             # 1. Convert markdown headers (### Heading) to bold (**Heading**)
             text = re.sub(r'^(#{1,6})\s+(.+)$', r'**\2**\n', text, flags=re.MULTILINE)
 
@@ -493,11 +500,8 @@ class LLMService:
             # 3. Strip stray code comment slashes (leaving web links intact)
             text = re.sub(r'(?<!https:)(?<!http:)//\s*', '', text)
 
-            # 4. Enforce Gemini-style citation footer
-            if 'Verified Sources' not in text and '[Source:' not in text and fallback_citations:
-                text += '\n\n📚 **Verified Sources:**\n' + '\n'.join([f'• [Source: {c}]' for c in fallback_citations[:3]])
             return text.strip()
 
-        return sanitize_socratic_output(raw_reply, citation_candidates)
+        return sanitize_socratic_output(raw_reply)
 
 llm_service = LLMService()

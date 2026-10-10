@@ -232,16 +232,7 @@ export const useGraphStore = create<GraphState>()(
           newProfile = await api.createProfile(`device_${newDeviceId}@tessera.edu`, `Explorer #${newDeviceId.slice(-4).toUpperCase()}`, hobbyAnchor);
         }
 
-        set({ userProfile: newProfile });
-
-        try {
-          await api.seedSampleChapter(newProfile.id, 1, newProfile.hobby_anchor || hobbyAnchor);
-        } catch (e) {
-          console.warn('Initial sample chapter seeding failed:', e);
-        }
-
-        await get().loadUserGraph(newProfile.id);
-        set({ isLoading: false, isInitialized: true });
+        set({ userProfile: newProfile, isLoading: false, isInitialized: true });
         return newProfile;
       },
 
@@ -274,7 +265,6 @@ export const useGraphStore = create<GraphState>()(
           try {
             profile = await api.createOrGetDeviceProfile(deviceId, profile?.hobby_anchor || 'Music Production');
             set({ userProfile: profile });
-            await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
             await get().loadUserGraph(profile.id);
             return profile;
           } catch (e) {
@@ -286,10 +276,8 @@ export const useGraphStore = create<GraphState>()(
         try {
           const syncedProfile = await api.createOrGetDeviceProfile(deviceId, profile?.hobby_anchor || 'Music Production');
           if (syncedProfile.id !== profile.id) {
-            // Profile was reset in DB: cleanly re-seed for the new profile ID
             profile = syncedProfile;
             set({ userProfile: syncedProfile, nodes: [], edges: [], chapters: [] });
-            await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
             await get().loadUserGraph(profile.id);
             return profile;
           }
@@ -297,18 +285,7 @@ export const useGraphStore = create<GraphState>()(
           console.warn('Device profile sync fallback:', e);
         }
 
-        if (get().chapters.length === 0) {
-          await get().loadUserGraph(profile.id);
-          // If user has no chapters yet, seed Sample Chapter 1
-          if (get().chapters.length === 0) {
-            try {
-              await api.seedSampleChapter(profile.id, 1, profile.hobby_anchor || 'Music Production');
-              await get().loadUserGraph(profile.id);
-            } catch (e) {
-              console.warn('Initial sample chapter seeding failed:', e);
-            }
-          }
-        }
+        await get().loadUserGraph(profile.id);
         return profile;
       },
 
