@@ -10,9 +10,9 @@ logger = logging.getLogger(__name__)
 
 def clean_json_response(content: str) -> Dict[str, Any]:
     """
-    Cleans markdown formatting, fences, and whitespace to extract valid JSON.
+    Cleans markdown formatting, <think> tags, fences, and whitespace to extract valid JSON.
     """
-    content = content.strip()
+    content = re.sub(r"<think>[\s\S]*?</think>", "", content, flags=re.IGNORECASE).strip()
     # Match ```json ... ``` or ``` ... ```
     fence_pattern = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", content)
     if fence_pattern:
@@ -54,78 +54,64 @@ class LLMService:
             self.key_32b = settings.GROQ_API_KEY_32B
             self.client_32b = Groq(api_key=self.key_32b)
 
-    def _call_70b(self, system_prompt: str, user_content: str, json_mode: bool = True, max_tokens: int = 2500) -> Dict[str, Any]:
+    def _call_70b(self, system_prompt: str, user_content: str, json_mode: bool = True, max_tokens: int = 4096) -> Dict[str, Any]:
         self._ensure_clients()
         if not self.client_70b and not self.client_32b:
             raise ValueError("Groq API keys are not configured. Please set GROQ_API_KEY_70B and/or GROQ_API_KEY_32B in your .env file.")
         last_error = None
-        for model in self.candidates_70b:
-            try:
-                kwargs: Dict[str, Any] = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content}
-                    ],
-                    "temperature": 0.1,
-                    "max_tokens": max_tokens
-                }
-                if json_mode:
-                    kwargs["response_format"] = {"type": "json_object"}
-                response = self.client_70b.chat.completions.create(**kwargs)
-                raw = response.choices[0].message.content or "{}"
-                return clean_json_response(raw) if json_mode else {"text": raw}
-            except Exception as e:
-                logger.warning(f"70B client call failed with model {model}: {e}")
-                last_error = e
-                continue
-        # If all fail, try 32B client as ultimate fallback
-        for model in self.candidates_32b:
-            try:
-                kwargs = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content}
-                    ],
-                    "temperature": 0.1,
-                    "max_tokens": max_tokens
-                }
-                if json_mode:
-                    kwargs["response_format"] = {"type": "json_object"}
-                response = self.client_32b.chat.completions.create(**kwargs)
-                raw = response.choices[0].message.content or "{}"
-                return clean_json_response(raw) if json_mode else {"text": raw}
-            except Exception as e:
-                last_error = e
-                continue
+        clients = [c for c in [self.client_70b, self.client_32b] if c is not None]
+        for client in clients:
+            for model in self.candidates_70b:
+                for use_json_format in ([True, False] if json_mode else [False]):
+                    try:
+                        kwargs: Dict[str, Any] = {
+                            "model": model,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_content}
+                            ],
+                            "temperature": 0.15,
+                            "max_tokens": max_tokens
+                        }
+                        if use_json_format:
+                            kwargs["response_format"] = {"type": "json_object"}
+                        response = client.chat.completions.create(**kwargs)
+                        raw = response.choices[0].message.content or "{}"
+                        return clean_json_response(raw) if json_mode else {"text": raw}
+                    except Exception as e:
+                        logger.warning(f"70B call failed with model {model} (json_format={use_json_format}): {e}")
+                        last_error = e
+                        continue
         raise RuntimeError(f"All LLM candidate models failed: {last_error}")
 
-    def _call_32b(self, system_prompt: str, user_content: str, json_mode: bool = True, max_tokens: int = 2500) -> Dict[str, Any]:
+    def _call_32b(self, system_prompt: str, user_content: str, json_mode: bool = True, max_tokens: int = 4096) -> Dict[str, Any]:
         self._ensure_clients()
         if not self.client_32b and not self.client_70b:
             raise ValueError("Groq API keys are not configured. Please set GROQ_API_KEY_32B and/or GROQ_API_KEY_70B in your .env file.")
         last_error = None
-        for model in self.candidates_32b:
-            try:
-                kwargs: Dict[str, Any] = {
-                    "model": model,
-                    "messages": [
-                        {"role": "system", "content": system_prompt},
-                        {"role": "user", "content": user_content}
-                    ],
-                    "temperature": 0.0,
-                    "max_tokens": max_tokens
-                }
-                if json_mode:
-                    kwargs["response_format"] = {"type": "json_object"}
-                response = self.client_32b.chat.completions.create(**kwargs)
-                raw = response.choices[0].message.content or "{}"
-                return clean_json_response(raw) if json_mode else {"text": raw}
-            except Exception as e:
-                logger.warning(f"32B client call failed with model {model}: {e}")
-                last_error = e
-                continue
+        clients = [c for c in [self.client_32b, self.client_70b] if c is not None]
+        for client in clients:
+            for model in self.candidates_32b:
+                for use_json_format in ([True, False] if json_mode else [False]):
+                    try:
+                        kwargs: Dict[str, Any] = {
+                            "model": model,
+                            "messages": [
+                                {"role": "system", "content": system_prompt},
+                                {"role": "user", "content": user_content}
+                            ],
+                            "temperature": 0.1,
+                            "max_tokens": max_tokens
+                        }
+                        if use_json_format:
+                            kwargs["response_format"] = {"type": "json_object"}
+                        response = client.chat.completions.create(**kwargs)
+                        raw = response.choices[0].message.content or "{}"
+                        return clean_json_response(raw) if json_mode else {"text": raw}
+                    except Exception as e:
+                        logger.warning(f"32B call failed with model {model} (json_format={use_json_format}): {e}")
+                        last_error = e
+                        continue
         raise RuntimeError(f"All 32B LLM models failed: {last_error}")
 
     # =========================================================================
@@ -139,13 +125,14 @@ class LLMService:
         """
         system_prompt = (
             "You are a principal cognitive curriculum architect.\n"
-            "Extract exactly 5 to 7 key atomic concepts from the provided textbook text, plus 1 Hobby Anchor node.\n"
+            "CRITICAL REQUIREMENT: Extract AT LEAST 6 to 7 distinct atomic concepts (is_hobby_anchor=false) from the provided textbook text, PLUS 1 Hobby Anchor node (is_hobby_anchor=true), for a total of 7 to 8 nodes in 'concepts'.\n"
+            "NEVER return fewer than 6 non-hobby concepts! Even if the text is brief, decompose its physical mechanisms, governing equations, variables, and conservation laws into at least 6 distinct concept nodes.\n"
             "MANDATORY TOPOLOGY: Build a TRUE MULTI-BRANCHING DAG SKILL TREE with branching and converging causal paths (e.g. Diamond pattern: Concept A branches into B and C; both B and C converge into D; D branches into E and F).\n"
             "CRITICAL: DO NOT create a single linear 1D chain (A -> B -> C -> D). Real physical/system dynamics feature parallel causal tracks that synthesize together.\n"
             "- At least 1 foundational concept must branch to multiple downstream concepts (out-degree >= 2).\n"
             "- At least 2 concepts must have multiple upstream causal prerequisites converging into them (in-degree >= 2).\n"
             "Every non-hobby concept must be connected in the DAG. Avoid directed cycles.\n"
-            "MANDATORY: You MUST include BOTH the 'concepts' array AND the 'edges' array in the JSON output. Never omit 'edges'. Include at least 6 to 9 causal edges linking concepts.\n"
+            "MANDATORY: You MUST include BOTH the 'concepts' array (7-8 nodes) AND the 'edges' array (7-10 edges) in the JSON output. Never omit 'edges'.\n"
             "MANDATORY: For EVERY edge, 'connection_reason' MUST be a specific, authentic physical/causal mechanism (1-2 sentences) explaining why source directly drives, constrains, or mathematically necessitates target. DO NOT write generic phrases.\n\n"
             f"When extracting concepts from text, produce a DISTINCT, non-obvious, concise 1-sentence hobby analogy for EVERY individual concept node grounded in '{hobby_anchor}'.\n"
             "NEVER repeat the same analogy across concepts.\n\n"
@@ -182,8 +169,23 @@ class LLMService:
             f'  "hobby_analogy": "Primary world model anchor in {hobby_anchor}"\n'
             "}"
         )
-        user_content = f"Chapter Title: {chapter_title}\nSubject: {subject}\nStudent Hobby Anchor: {hobby_anchor}\n\nTextbook Context:\n{pdf_text_sample[:4500]}"
-        return self._call_70b(system_prompt, user_content, json_mode=True, max_tokens=2200)
+        user_content = f"Chapter Title: {chapter_title}\nSubject: {subject}\nStudent Hobby Anchor: {hobby_anchor}\n\nTextbook Context:\n{pdf_text_sample[:7000]}"
+        res = self._call_70b(system_prompt, user_content, json_mode=True, max_tokens=6000)
+        non_hobby = [c for c in res.get("concepts", []) if not c.get("is_hobby_anchor")]
+        if len(non_hobby) < 5:
+            logger.warning(f"Initial extraction returned only {len(non_hobby)} non-hobby concepts; retrying with explicit expansion...")
+            retry_content = (
+                user_content
+                + f"\n\nIMPORTANT: Your previous attempt only returned {len(non_hobby)} concepts. "
+                "You MUST return at least 6 distinct non-hobby concepts (plus 1 hobby anchor = 7+ total nodes) and 7+ causal edges!"
+            )
+            try:
+                res2 = self._call_70b(system_prompt, retry_content, json_mode=True, max_tokens=6000)
+                if len([c for c in res2.get("concepts", []) if not c.get("is_hobby_anchor")]) > len(non_hobby):
+                    res = res2
+            except Exception as e:
+                logger.warning(f"Retry extraction failed: {e}")
+        return res
 
     def batch_regenerate_analogies(self, concepts: List[Dict[str, Any]], new_hobby: str) -> List[Dict[str, Any]]:
         """
